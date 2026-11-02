@@ -1,0 +1,16 @@
+{
+  "repository": "https://github.com/Sentient-OS-Labs/sentient-os",
+  "revision": "fe28c9c14ddb5b2e63902ca137594e9c4e6bfdac",
+  "license": "AGPL-3.0",
+  "copied_files": [
+    "Diagnostics/NativeComputerUseFailure.swift",
+    "Driver/NativeAppStateRetry.swift",
+    "Driver/OpenAIComputerUseProbe.swift",
+    "Driver/OpenAIComputerUseSession.swift",
+    "Cloud/LocalMCPServer.swift",
+    "Driver/NativeComputerUseServer.swift",
+    "Cloud/LoopbackHTTP.swift"
+  ],
+  "fork": "https://github.com/vashispa27/cortex-sentient-trial",
+  "branch": "codex/cortex-native-trial"
+}

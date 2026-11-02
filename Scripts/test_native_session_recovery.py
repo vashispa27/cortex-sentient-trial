@@ -131,6 +131,20 @@ import Darwin
     }
     static func main() async throws {
         do {
+            let (server, url) = try await open("non-left")
+            _ = try await server.respond(rpc(1))
+            let unsafe = try JSONSerialization.data(withJSONObject: ["jsonrpc":"2.0", "id":2, "method":"tools/call",
+                "params":["name":"click", "arguments":["app":"fixture", "element_index":"23", "mouse_button":"middle"]]])
+            let rejected = try await server.respond(unsafe)
+            check(NativeComputerUseFailure.isError(try result(rejected)), "Non-left AX click must be rejected before dispatch")
+            check(try state(url)["calls"] as? [String] == ["get_app_state"], "Rejected AX middle-click must not perform an ordinary click")
+            let pixels = try JSONSerialization.data(withJSONObject: ["jsonrpc":"2.0", "id":3, "method":"tools/call",
+                "params":["name":"click", "arguments":["app":"fixture", "x":100, "y":200, "mouse_button":"middle"]]])
+            let accepted = try await server.respond(pixels)
+            check(!NativeComputerUseFailure.isError(try result(accepted)), "Non-left pixel input remains available after a fresh state read")
+            await server.stop()
+        }
+        do {
             let (server, url) = try await open("read")
             let failed = try await server.respond(rpc(1, "get_app_state", "drop_read"))
             check(NativeComputerUseFailure.isError(try result(failed)), "Disconnected read reaches the agent as a tool error")
@@ -207,8 +221,8 @@ with tempfile.TemporaryDirectory(prefix="sentient-native-session-recovery-") as 
     executable = root / "tests"
     env = dict(os.environ, TEST_RPC_PEER=str(peer), TEST_RPC_STATE_DIR=str(root))
     subprocess.run(["xcrun", "swiftc", "-parse-as-library", "-swift-version", "5", "-target",
-                    f"{platform.machine()}-apple-macos15.0", str(root / "Support.swift"), str(root / "Tests.swift"),
-                    *[str(APP / p) for p in ["Diagnostics/NativeComputerUseFailure.swift",
+                    f"{platform.machine()}-apple-macos15.0", str(root / "Support.swift"), str(root / "Tests.swift"), str(APP.parent / "CortexTrial/src/OriginTarget.swift"),
+                    *[str(APP.parent / "CortexTrial/src" / Path(p).name) if (APP.parent / "CortexTrial/src" / Path(p).name).exists() else str(APP / p) for p in ["Diagnostics/NativeComputerUseFailure.swift",
                         "Diagnostics/ComputerUseDiagnosticConsent.swift", "Diagnostics/ComputerUseDiagnosticPolicy.swift",
                         "Driver/NativeAppStateRetry.swift", "Driver/OpenAIComputerUseProbe.swift", "Driver/NativePermissionReadiness.swift",
                         "Driver/OpenAIComputerUseSession.swift", "Driver/NativeComputerUseServer.swift"]],
